@@ -1,0 +1,105 @@
+# - include_tasks: 'check-vars.yml'
+- name: Configure OS
+  include_tasks: '00_config_OS.yml'
+
+- name: Load OS-specific variables
+  include_tasks: '01_setup_repo_{{ansible_os_family}}.yml'
+
+
+- name: Install Kubernetes packages.
+  ansible.builtin.package:
+    name: "{{ item.name | default(item) }}"
+    state: "{{ item.state | default('present') }}"
+  notify: restart kubelet
+  with_items:
+    - name: kubelet
+      state: present
+    - name: kubectl
+      state: present
+    - name: kubeadm
+      state: present
+    - name: containerd
+      state: present
+
+- name: Add IP address of all hosts to all hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '.*{{ item }}$'
+    line: "{{ hostvars[item].ansible_host }} {{item}}"
+    state: present
+  when: hostvars[item].ansible_host is defined
+  with_items: "{{ groups.all }}"
+
+
+- name: Install containerd
+  include_tasks: '02_install_containerd.yml'
+
+
+- name: Config keepalived
+  include_tasks: '02_config_keepalived.yml'
+
+
+
+- name: Check if Kubernetes has already been initialized.
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: kubernetes_init_stat
+
+# Собираем мастеров
+- include_tasks: '03_control_plain_setup.yml'
+  when: inventory_hostname in groups['kube_control_plane']
+
+
+# Устанавливаем Config
+- include_tasks: '05_install_cni.yml'
+  when: inventory_hostname == groups['kube_control_plane'][0]
+  tags:
+  - cni
+
+- name: Worker join
+  tags:
+  - workers
+  block:
+  # Получаем join команду для воркеров.
+  - name: Get the kubeadm join command from the Kubernetes control plane.
+    command: kubeadm token create --print-join-command
+    changed_when: false
+    when: inventory_hostname == groups['kube_control_plane'][0]
+    register: kubernetes_join_command_result
+
+  - name: Set the kubeadm join command globally.
+    set_fact:
+      kubernetes_join_command: >
+        {{ kubernetes_join_command_result.stdout }}
+    when: kubernetes_join_command_result.stdout is defined
+    delegate_to: "{{ item }}"
+    delegate_facts: true
+    with_items: "{{ groups['kube_node'] }}"
+
+  - name: Get list of nodes from Kubernetes
+    shell : export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl get nodes -o custom-columns=NAME:.metadata.name --no-headers
+    register: kubectl_nodes_result
+    changed_when: false
+    when: inventory_hostname == groups['kube_control_plane'][0]
+
+  - name: Set the kubeadm join command globally.
+    set_fact:
+      kubectl_nodes: >
+        {{ kubectl_nodes_result.stdout }}
+    when: kubectl_nodes_result.stdout is defined
+    delegate_to: "{{ item }}"
+    delegate_facts: true
+    with_items: "{{ groups['kube_node'] }}"
+
+
+  - name: Join workers
+    when: 
+    - inventory_hostname in groups['kube_node']
+    - kubectl_nodes is defined
+    - inventory_hostname not in  kubectl_nodes
+    - kubernetes_join_command is defined
+    block:
+    # Присоединяем воркеров
+    - name: Join workers
+      command: "{{ kubernetes_join_command }}"
+

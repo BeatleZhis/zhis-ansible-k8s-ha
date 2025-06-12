@@ -1,0 +1,71 @@
+
+- name: Master 1 setup
+  when: 
+   - not kubernetes_init_stat.stat.exists
+   - inventory_hostname in groups['kube_control_plane'][0]
+  block:
+
+  # Запускаем инициализацию только на первом мастере
+  - name: Initialize Kubernetes control plane with kubeadm init
+    command: >
+      kubeadm init
+      --control-plane-endpoint "{{ (vip_ip_masters | split('/'))[0]  }}:6443" --upload-certs
+      {{ kubernetes_kubeadm_init_extra_opts }}
+    register: kubeadmin_init
+
+  - name: Print the init output to screen.
+    debug:
+      var: kubeadmin_init.stdout
+
+
+
+
+
+
+###################################################
+#
+# Блок получения команды для джойна мастеров
+#
+###################################################
+
+# Получаем kubeadm_certs_certificate_key
+- name: Get the kubeadm certs certificate key.
+  command: 'kubeadm init phase upload-certs --upload-certs'
+  changed_when: false
+  register: kubeadm_certs_certificate_key
+  when: inventory_hostname in groups['kube_control_plane'][0]
+
+- name: Pring master join kubeadm_certs_certificate_key
+  debug:
+    var: kubeadm_certs_certificate_key
+
+# Получаем join command для мастеров
+- name: Get the kubeadm join command from the Kubernetes control plane.
+  command: 'kubeadm token create --print-join-command --certificate-key {{kubeadm_certs_certificate_key.stdout_lines[2] | trim }}'
+  changed_when: false
+  register: kubernetes_master_join_command_result
+  when: inventory_hostname in groups['kube_control_plane'][0]
+
+# Создаем fact join command для мастеров
+- name: Set the kubeadm master join command globally.
+  set_fact:
+    kubernetes_master_join_command: >
+      {{ kubernetes_master_join_command_result.stdout }}
+  when: kubernetes_master_join_command_result.stdout is defined
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  with_items: "{{ groups['kube_control_plane'] }}"
+
+- name: Pring master join command
+  debug:
+    var: kubernetes_master_join_command
+    
+- name: Join masters.
+  when: 
+  - not kubernetes_init_stat.stat.exists
+  - inventory_hostname in groups['kube_control_plane'][1:]
+  block:
+  # Присоединяем мастеров
+  - name: Join masters.
+    command: "{{ kubernetes_master_join_command }}"
+

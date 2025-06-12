@@ -1,0 +1,21 @@
+- name: Install Cni
+  tags: 
+  - cni
+  block:
+    # Metric server
+    - name: Copy metric-server manifest 
+      template:
+        src: "metric-server.j2"
+        dest: "/tmp/metric-server.yaml"
+      tags:
+      - cni
+    - name: Install the metrics server.
+      shell: "export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f /tmp/metric-server.yaml"
+
+    - name: Install CNI flanel
+      include_tasks: '06_flannel.yml'
+      when: kubernetes_cni == "flanel"
+
+    - name: Install CNI calico
+      include_tasks: '06_calico.yml'
+      when: kubernetes_cni == "calico"

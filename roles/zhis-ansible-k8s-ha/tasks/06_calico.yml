@@ -1,0 +1,24 @@
+# Calico
+
+- name: Install the Tigera Calico operator and custom resource definitions.
+  command: "kubectl create -f {{ kubernetes_calico_crd_manifest_file }}"
+  when: not kubernetes_init_stat.stat.exists
+  register: calico_result
+  changed_when: "'created' in calico_result.stdout"
+  until: calico_result is not failed
+  retries: 12
+  delay: 5
+
+- name: Add containerd calico networking configuration file
+  template:
+    src: calico-custom-resources.j2
+    dest: /tmp/custom-resources.yaml
+    mode: 0644
+
+- name: Configure Calico networking.
+  shell: "export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f /tmp/custom-resources.yaml"
+  register: calico_result
+  changed_when: "'created' in calico_result.stdout"
+  until: calico_result is not failed
+  retries: 12
+  delay: 5

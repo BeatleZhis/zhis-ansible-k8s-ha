@@ -1,0 +1,31 @@
+- name: Install keepalived package.
+  ansible.builtin.package:
+    name: keepalived
+    state: present
+
+
+# masters
+- name: Add keepalived configuration file
+  template:
+    src: keepalived_master.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    mode: 0644
+  notify: restart keepalived
+  when: inventory_hostname in groups['kube_control_plane']
+
+# workers
+- name: Add keepalived configuration file
+  template:
+    src: keepalived_worker.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    mode: 0644
+  notify: restart keepalived
+  when: inventory_hostname in groups['kube_node']
+
+- name: Ensure keepalived is started and enabled at boot.
+  service:
+    name: keepalived
+    state: "started"
+    enabled: "true"
+
+

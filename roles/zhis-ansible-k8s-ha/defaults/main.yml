@@ -1,0 +1,45 @@
+---
+#Server configuration
+kubernetes_version: '1.33'
+
+# Keepalived VIP IP
+vip_ip_masters: ""
+vip_ip_workers: ""
+
+#network
+kubernetes_cni: "flanel"  # or calico
+kubernetes_pod_subnet: "10.244.0.0/16"
+kubernetes_service_subnet: "10.96.0.0/16"
+
+
+
+#kubeadmin config
+
+kubernetes_kubeadm_init_extra_opts: "--pod-network-cidr {{kubernetes_pod_subnet}} --service-cidr {{kubernetes_service_subnet}}"
+kubernetes_apiserver_advertise_address: ''
+
+kubernetes_version_kubeadm: 'stable'
+kubernetes_kubeadm_kubelet_config_file_path: '/tmp/kubeadm-kubelet-config.yaml'
+
+kubernetes_config_init_configuration:
+  localAPIEndpoint:
+    advertiseAddress: "{{ kubernetes_apiserver_advertise_address | default(ansible_default_ipv4.address, true) }}"
+
+kubernetes_config_cluster_configuration:
+  networking:
+    serviceSubnet: '{{ kubernetes_service_subnet }}'
+    podSubnet: '{{ kubernetes_pod_subnet }}'
+    dnsDomain: '{{ kubernetes_local_domain }}'
+  kubernetesVersion: "{{ kubernetes_version_kubeadm }}"
+
+kubernetes_config_kube_proxy_configuration: {}
+
+# https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#kubelet-serving-certs
+kubernetes_config_kubelet_configuration: {}
+
+
+#Debian
+kubernetes_apt_repository: 'https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb'
+
+#Calico
+kubernetes_calico_crd_manifest_file : 'https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/tigera-operator.yaml'

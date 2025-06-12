@@ -1,0 +1,14 @@
+# Calico
+- name: Add flanel manifest file
+  template:
+    src: flannel-config.j2
+    dest: /tmp/flannel-config.yaml
+    mode: 0644
+
+- name: Configure Calico networking.
+  shell: "export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f /tmp/flannel-config.yaml"
+  register: flannel_result
+  changed_when: "'created' in flannel_result"
+  until: flannel_result is not failed
+  retries: 12
+  delay: 5
