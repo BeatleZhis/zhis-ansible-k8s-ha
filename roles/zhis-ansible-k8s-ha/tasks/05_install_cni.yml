@@ -10,7 +10,7 @@
       tags:
       - cni
     - name: Install the metrics server.
-      shell: "export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f /tmp/metric-server.yaml"
+      shell: "kubectl apply -f /tmp/metric-server.yaml"
 
     - name: Install CNI flanel
       include_tasks: '06_flannel.yml'

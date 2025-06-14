@@ -4,7 +4,6 @@ kubernetes_version: '1.33'
 
 # Keepalived VIP IP
 vip_ip_masters: ""
-vip_ip_workers: ""
 
 #network
 kubernetes_cni: "flanel"  # or calico
@@ -30,6 +29,7 @@ kubernetes_config_cluster_configuration:
     serviceSubnet: '{{ kubernetes_service_subnet }}'
     podSubnet: '{{ kubernetes_pod_subnet }}'
     dnsDomain: '{{ kubernetes_local_domain }}'
+
   kubernetesVersion: "{{ kubernetes_version_kubeadm }}"
 
 kubernetes_config_kube_proxy_configuration: {}

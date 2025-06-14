@@ -6,4 +6,4 @@
     - role: zhis-ansible-k8s-ha
       vars:
         vip_ip_masters: "192.168.1.100/24"
-        vip_ip_workers: "192.168.1.200/24"
+        kubernetes_apt_repository: 'https://mirror.yandex.ru/mirrors/pkgs.k8s.io/core/stable/v{{ kubernetes_version }}/deb'

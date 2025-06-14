@@ -16,3 +16,5 @@
     mode: 0644
   notify: restart containerd
 
+- name: Flush handlers
+  meta: flush_handlers

@@ -16,7 +16,7 @@
     mode: 0644
 
 - name: Configure Calico networking.
-  shell: "export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f /tmp/custom-resources.yaml"
+  shell: "kubectl apply -f /tmp/custom-resources.yaml"
   register: calico_result
   changed_when: "'created' in calico_result.stdout"
   until: calico_result is not failed

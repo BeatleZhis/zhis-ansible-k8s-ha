@@ -19,9 +19,6 @@
 
 
 
-
-
-
 ###################################################
 #
 # Блок получения команды для джойна мастеров
@@ -59,7 +56,8 @@
 - name: Pring master join command
   debug:
     var: kubernetes_master_join_command
-    
+  run_once: true    
+
 - name: Join masters.
   when: 
   - not kubernetes_init_stat.stat.exists
