@@ -1,0 +1,17 @@
+#  Копирование admin.conf в домашнюю директорию пользователя
+- name: Copy admin.conf to user's home directory
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "~/.kube/config"
+    mode: 0600
+    remote_src: yes
+#  Настраиваем переменные окружения
+- name: Configure KUBECONFIG in bashrc
+  blockinfile:
+    path: "~/.bashrc"
+    block: |
+      export KUBECONFIG=~/.kube/config
+      source <(kubectl completion bash)
+      alias k=kubectl
+      complete -o default -F __start_kubectl k
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - KUBERNETES CONFIG"

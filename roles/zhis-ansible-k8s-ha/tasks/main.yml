@@ -49,6 +49,9 @@
 - include_tasks: '03_control_plain_setup.yml'
   when: inventory_hostname in groups['kube_control_plane']
 
+# Настраиваем kuebctl на мастерах
+- include_tasks: '03_kubectl_config.yml'
+  when: inventory_hostname in groups['kube_control_plane']
 
 # Устанавливаем Config
 - include_tasks: '05_install_cni.yml'
@@ -103,3 +106,12 @@
     - name: Join workers
       command: "{{ kubernetes_join_command }}"
 
+  - name: Read /etc/kubernetes/admin.conf
+    shell: "cat /etc/kubernetes/admin.conf"
+    register: kubeconfig
+    when: inventory_hostname == groups['kube_control_plane'][0]
+
+  - name: Print kubeconfig
+    debug:
+      msg: "{{ kubeconfig.stdout }}"
+    when: inventory_hostname == groups['kube_control_plane'][0]
