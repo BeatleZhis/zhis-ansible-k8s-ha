@@ -1,3 +1,9 @@
+# Проверяем что папка существует
+- name: Create a directory if it does not exist
+  file:
+    path: ~/.kube
+    state: directory
+
 #  Копирование admin.conf в домашнюю директорию пользователя
 - name: Copy admin.conf to user's home directory
   copy:
@@ -14,4 +20,4 @@
       source <(kubectl completion bash)
       alias k=kubectl
       complete -o default -F __start_kubectl k
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - KUBERNETES CONFIG"
+      
