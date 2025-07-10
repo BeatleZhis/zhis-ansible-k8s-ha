@@ -12,6 +12,7 @@
     name: "{{ item }}"
     value: '1'
     state: present
+    sysctl_set: true
   loop:
     - net.ipv4.ip_forward
     - net.bridge.bridge-nf-call-iptables
