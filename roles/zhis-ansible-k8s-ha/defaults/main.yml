@@ -42,4 +42,4 @@ kubernetes_config_kubelet_configuration: {}
 kubernetes_apt_repository: 'https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb'
 
 #Calico
-kubernetes_calico_crd_manifest_file : 'https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/tigera-operator.yaml'
+kubernetes_calico_crd_manifest_file : 'https://raw.githubusercontent.com/projectcalico/calico/v3.30.3/manifests/tigera-operator.yaml'
