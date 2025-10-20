@@ -7,6 +7,17 @@
     - br_netfilter
     - overlay
 
+- name: Configure modules to load at boot
+  copy:
+    content: "{{ item }}"
+    dest: "/etc/modules-load.d/{{ item }}.conf"
+    owner: root
+    group: root
+    mode: 0644
+  loop:
+    - br_netfilter
+    - overlay
+
 - name: Enable packet forwarding, enable packets crossing a bridge are sent to iptables for processing
   sysctl:
     name: "{{ item }}"

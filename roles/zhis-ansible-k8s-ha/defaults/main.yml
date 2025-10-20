@@ -28,7 +28,6 @@ kubernetes_config_cluster_configuration:
   networking:
     serviceSubnet: '{{ kubernetes_service_subnet }}'
     podSubnet: '{{ kubernetes_pod_subnet }}'
-    dnsDomain: '{{ kubernetes_local_domain }}'
 
   kubernetesVersion: "{{ kubernetes_version_kubeadm }}"
 
