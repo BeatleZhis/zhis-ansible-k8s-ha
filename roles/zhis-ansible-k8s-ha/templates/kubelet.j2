@@ -3,6 +3,10 @@
 #
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
+etcd:
+  local:
+    extraArgs:
+      listen-metrics-urls: "http://0.0.0.0:2381"
 authentication:
   anonymous:
     enabled: false
